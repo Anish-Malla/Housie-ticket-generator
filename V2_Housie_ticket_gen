@@ -1,0 +1,232 @@
+import random
+from twilio.rest import Client
+from datetime import datetime
+import smtplib
+
+def createTicket():
+
+    # Creating 9 arrays which represents the numbers which are available in each of the columns
+    set1 = [1,2,3,4,5,6,7,8,9]
+    set2 = [11,12,13,14,15,16,17,18,19,10]
+    set3 = [21,22,23,24,25,26,27,28,29,20]
+    set4 = [31,32,33,34,35,36,37,38,39,30]
+    set5 = [41,42,43,44,45,46,47,48,49,40]
+    set6 = [51,52,53,54,55,56,57,58,59,50]
+    set7 = [61,62,63,64,65,66,67,68,69,60]
+    set8 = [71,72,73,74,75,76,77,78,79,70]
+    set9 = [81,82,83,84,85,86,87,88,89,80,90]
+
+    # in a "9x3" table in each of the rows choose 5 random cells (1 - 9)
+    #  (1    2   3   4   5   6   7   8   9) * 3
+    allSelectedCells = []
+    checker = []
+    class SelectedCells:
+        def randomSelector():
+            selectedCells = []
+            while len(selectedCells) < 5:
+                x = random.randint(1,9)
+                if x not in selectedCells and checker.count(x) <= 1:
+                    selectedCells.append(x)
+                    allSelectedCells.append(x)
+                    checker.append(x)
+            return selectedCells
+
+    #In accordance to the number that was chosen in the selected cells select a random from the array which it corresponds to
+    #For example if cell position 8 was chosen pick a random number from array 8
+
+    allSelectedNums = []
+
+    def numbers(positionCells):
+        list = []
+        for num in positionCells:
+            flag = True
+            while flag == True:
+                if num == 1:
+                    x = random.choice(set1)
+                if num == 2:
+                    x = random.choice(set2)
+                if num == 3:
+                    x = random.choice(set3)
+                if num == 4:
+                    x = random.choice(set4)
+                if num == 5:
+                    x = random.choice(set5)
+                if num == 6:
+                    x = random.choice(set6)
+                if num == 7:
+                    x = random.choice(set7)
+                if num == 8:
+                    x = random.choice(set8)
+                if num == 9:
+                    x = random.choice(set9)
+                if x not in allSelectedNums:
+                    list.append(x)
+                    allSelectedNums.append(x)
+                    flag = False
+        return list
+
+    # The housie ticket itself
+    def housieTicket():
+        return [0,0,0,0,0,0,0,0,0]
+
+    flag2 = True
+    rangeOfNums = [z for z in range(1, 10)]
+    while flag2 == True:
+        # flag2 = True
+        global p1
+        global p2
+        global p3
+        p1 = SelectedCells.randomSelector()
+        p2 = SelectedCells.randomSelector()
+        p3 = SelectedCells.randomSelector()
+
+        for i in range(0,5):
+            if p1[i] in p3 and p1[i] in p2:
+                # print("IN IF")
+                break
+            for x in rangeOfNums:
+                if x not in p1 and x not in p2 and x not in p3:
+                    break
+                else:
+                    flag2 = False
+
+    row1cellPositon = p1
+    row2cellPositon = p2
+    row3cellPositon = p3
+
+    htrow1 = housieTicket()
+    htrow2 = housieTicket()
+    htrow3 = housieTicket()
+
+    row1nums = numbers(row1cellPositon)
+    row2nums = numbers(row2cellPositon)
+    row3nums = numbers(row3cellPositon)
+
+    def rowMaker(cellPosition, numbers, displayTicket):
+        for i in range(0,5):
+            displayTicket[cellPosition[i] - 1] = numbers[i]
+        return displayTicket
+
+    r1 = rowMaker(row1cellPositon, row1nums, htrow1)
+    r2 = rowMaker(row2cellPositon, row2nums, htrow2)
+    r3 = rowMaker(row3cellPositon, row3nums, htrow3)
+
+    # # In order to set it in ascending order vertically
+    def ascendingOrder(r1,r2,r3):
+            for i in range(0,9):
+                if r2[i]!=0 and r1[i]!=0 and r3[i]!=0:
+                    nums = [r1[i], r2[i], r3[i]]
+                    x = max(nums)
+                    y = min(nums)
+                    nums.remove(x)
+                    nums.remove(y)
+                    r3[i] = x
+                    r1[i] = y
+                    r2[i] = nums[0]
+
+                elif r1[i]==0 and r2[i]!=0 and r3[i]!=0:
+                    if r2[i] > r3[i]:
+                        x = r2[i]
+                        y = r3[i]
+                        r2[i] = y
+                        r3[i] = x
+                elif r2[i]==0 and r1[i]!=0 and r3[i]!=0:
+                    if r3[i] < r1[i]:
+                        x = r3[i]
+                        y = r1[i]
+                        r1[i] = x
+                        r3[i] = y
+                elif r3[i]==0 and r2[i]!=0 and r1[i]!=0:
+                    if r2[i] < r1[i]:
+                        x = r2[i]
+                        y = r1[i]
+                        r1[i] = x
+                        r2[i] = y
+                else:
+                    pass
+
+    ascendingOrder(r1,r2,r3)
+    for i in range(0,9):
+        if r1[i] == 0:
+            r1[i] = "00"
+        if r2[i] == 0:
+            r2[i] = "00"
+        if r3[i] == 0:
+            r3[i] = "00"
+
+    # single digits to have same spacing as double digits so it looks better
+    def singleNumPadding(row):
+        for x in range(0,9):
+            if row[x] == 1:
+                row[x] = f"0{1}"
+            if row[x] == 2:
+                row[x] = f"0{2}"
+            if row[x] == 3:
+                row[x] = f"0{3}"
+            if row[x] == 4:
+                row[x] = f"0{4}"
+            if row[x] == 5:
+                row[x] = f"0{5}"
+            if row[x] == 6:
+                row[x] = f"0{6}"
+            if row[x] == 7:
+                row[x] = f"0{7}"
+            if row[x] == 8:
+                row[x] = f"0{8}"
+            if row[x] == 9:
+                row[x] = f"0{9}"
+    singleNumPadding(r1)
+    singleNumPadding(r2)
+    singleNumPadding(r3)
+
+    finalTicket = f"- - - - - - - - - - - - - - - - - - - - - - - - -\n|{r1[0]}|{r1[1]}|{r1[2]}|{r1[3]}|{r1[4]}|{r1[5]}" \
+                  f"|{r1[6]}|{r1[7]}|{r1[8]}|\n- - - - - - - - - - - - - - - - - - - - - - - - - \n|{r2[0]}|{r2[1]}|" \
+                  f"{r2[2]}|{r2[3]}|{r2[4]}|{r2[5]}|{r2[6]}|{r2[7]}|{r2[8]}|\n- - - - - - - - - - - - - - - - - - - - - " \
+                  f"- - - -\n|{r3[0]}|{r3[1]}|{r3[2]}|{r3[3]}|{r3[4]}|{r3[5]}|{r3[6]}|{r3[7]}|{r3[8]}|\n- - - - - - - " \
+                  f"- - - - - - - - - - - - - - - - - - "
+    # finalTicket = Table(r1,r2,r3)
+
+    return finalTicket
+
+#semding sms / whatsapp through phone
+num_tickets = int(input("How many tickets do you want?"))
+
+messageYesOrNo = input("Do you want the tickets to be messaged to you? (yes or no)")
+if messageYesOrNo[0].lower() == "y":
+    to_number = input("You number: +91 and the rest of your number with no gaps")
+
+account_sid = "ACCOUNT SID"
+auth_token = "AUTH_TOKEN"
+client = Client(account_sid,auth_token)
+# from_number = "whatsapp:+14155238886"
+# from_number = "+13342349939"
+
+#sending email
+emailYesOrNo = input("Do you want the tickets to be emailed to you? (yes or no)")
+
+def email(emailid, text):
+    s = smtplib.SMTP('smtp.gmail.com', 587)
+    s.starttls()
+    s.login("anishtesting1234@gmail.com", "PASSWORD GOES IN HERE")
+    s.sendmail("anishtesting1234@gmail.com", emailid, text)
+    s.quit()
+
+if emailYesOrNo[0].lower() == "y":
+    email_id = input("Your email id:")
+
+# main part
+
+j = 1
+datee = datetime.now()
+finalMessage = ""
+while j <= num_tickets:
+    message = f"({datee.date()})\nTicket #{j}:\n{createTicket()}\n"
+    finalMessage += message
+    j += 1
+
+if messageYesOrNo[0].lower() == "y":
+    client.messages.create(body=finalMessage, from_=from_number, to=to_number)
+if emailYesOrNo[0].lower() == "y":
+    email(email_id, finalMessage)
+if messageYesOrNo[0].lower() != "y" and emailYesOrNo[0].lower() != "y":
+    print(finalMessage)
